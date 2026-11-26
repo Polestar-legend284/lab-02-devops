@@ -1,0 +1,36 @@
+plugins {
+    id 'java'
+}
+
+group = 'com.vit.demo'
+version = '1.0.0'
+
+java {
+    sourceCompatibility = JavaVersion.VERSION_21
+    targetCompatibility = JavaVersion.VERSION_21
+}
+
+jar {
+    archiveBaseName = 'ci-jenkins-demo'
+    manifest {
+        attributes 'Main-Class': 'com.vit.demo.App'
+    }
+}
+
+// The demonstration test is a plain Java class, so the built-in JUnit test task is switched off
+// and the test is run with a JavaExec task instead.
+tasks.named('test') {
+    enabled = false
+}
+
+tasks.register('runDemoTest', JavaExec) {
+    group = 'verification'
+    description = 'Runs the demonstration test (AppTest.main)'
+    dependsOn tasks.named('testClasses')
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = 'com.vit.demo.AppTest'
+}
+
+tasks.named('check') {
+    dependsOn tasks.named('runDemoTest')
+}

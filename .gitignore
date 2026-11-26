@@ -1,0 +1,9 @@
+target/
+ant-build/
+build/
+.gradle/
+.idea/
+.vscode/
+.classpath
+.project
+.settings/
