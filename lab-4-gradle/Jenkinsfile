@@ -41,9 +41,13 @@ pipeline {
         stage('Verify') {
             steps {
                 echo 'Checking deployed application'
-                retry(6) {
+                retry(10) {
                     sleep 5
-                    bat 'curl.exe --fail http://localhost:8081/jenkins-demo/'
+                    bat '''
+                        curl.exe --fail -s http://localhost:8081/jenkins-demo/ > page.html
+                        type page.html
+                        findstr /C:"Build Tool: Gradle" page.html
+                    '''
                 }
             }
         }
