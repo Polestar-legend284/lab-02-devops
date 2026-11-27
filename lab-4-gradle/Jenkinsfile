@@ -1,0 +1,66 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK-21'
+    }
+
+    environment {
+        GRADLE_HOME = 'C:\\DevTools\\gradle-9.9.2'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Downloading source code from GitHub'
+                checkout scm
+            }
+        }
+        stage('Compile') {
+            steps {
+                echo 'Compiling Java application with Gradle'
+                bat '"%GRADLE_HOME%\\bin\\gradle.bat" -p lab-4-gradle clean compileJava --console=plain'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Executing JUnit tests'
+                bat '"%GRADLE_HOME%\\bin\\gradle.bat" -p lab-4-gradle test --console=plain'
+            }
+        }
+        stage('Package') {
+            steps {
+                echo 'Creating WAR file'
+                bat '"%GRADLE_HOME%\\bin\\gradle.bat" -p lab-4-gradle war -x test --console=plain'
+                archiveArtifacts artifacts: 'lab-4-gradle/build/libs/*.war', fingerprint: true
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application to Tomcat'
+                bat 'copy /Y lab-4-gradle\\build\\libs\\jenkins-demo.war "C:\\apache-tomcat-11.0.29\\webapps\\jenkins-demo.war"'
+            }
+        }
+        stage('Verify') {
+            steps {
+                echo 'Checking deployed application'
+                retry(6) {
+                    sleep 5
+                    bat 'curl.exe --fail http://localhost:8081/jenkins-demo/'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: 'lab-4-gradle/build/test-results/test/*.xml'
+        }
+        success {
+            echo 'CI/CD PIPELINE SUCCESSFUL'
+        }
+        failure {
+            echo 'CI/CD PIPELINE FAILED'
+        }
+    }
+}

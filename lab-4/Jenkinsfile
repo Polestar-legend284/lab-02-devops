@@ -1,0 +1,63 @@
+pipeline {
+    agent any
+
+    tools {
+        jdk 'JDK-21'
+        maven 'Maven-3.9.16'
+    }
+
+    stages {
+        stage('Checkout') {
+            steps {
+                echo 'Downloading source code from GitHub'
+                checkout scm
+            }
+        }
+        stage('Compile') {
+            steps {
+                echo 'Compiling Java application'
+                bat 'mvn -f lab-4/pom.xml clean compile'
+            }
+        }
+        stage('Test') {
+            steps {
+                echo 'Executing JUnit tests'
+                bat 'mvn -f lab-4/pom.xml test'
+            }
+        }
+        stage('Package') {
+            steps {
+                echo 'Creating WAR file'
+                bat 'mvn -f lab-4/pom.xml package -DskipTests'
+                archiveArtifacts artifacts: 'lab-4/target/*.war', fingerprint: true
+            }
+        }
+        stage('Deploy') {
+            steps {
+                echo 'Deploying application to Tomcat'
+                bat 'copy /Y lab-4\\target\\jenkins-demo.war "C:\\apache-tomcat-11.0.29\\webapps\\jenkins-demo.war"'
+            }
+        }
+        stage('Verify') {
+            steps {
+                echo 'Checking deployed application'
+                retry(6) {
+                    sleep 5
+                    bat 'curl.exe --fail http://localhost:8081/jenkins-demo/'
+                }
+            }
+        }
+    }
+
+    post {
+        always {
+            junit allowEmptyResults: true, testResults: 'lab-4/target/surefire-reports/*.xml'
+        }
+        success {
+            echo 'CI/CD PIPELINE SUCCESSFUL'
+        }
+        failure {
+            echo 'CI/CD PIPELINE FAILED'
+        }
+    }
+}
