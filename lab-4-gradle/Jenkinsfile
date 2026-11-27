@@ -1,11 +1,8 @@
 pipeline {
     agent any
 
-    tools {
-        jdk 'JDK-21'
-    }
-
     environment {
+        JAVA_HOME = 'C:\\Program Files\\Eclipse Adoptium\\jdk-21.0.13.10002-hotspot'
         GRADLE_HOME = 'C:\\DevTools\\gradle-9.9.2'
     }
 
